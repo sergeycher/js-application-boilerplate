@@ -9,6 +9,7 @@
     <title></title>
 
     <link rel="stylesheet" href="app/index.css">
+    <script src="app/templates.js"></script>
     <script src="app/index.js"></script>
 </head>
 <body>

@@ -128,7 +128,8 @@ gulp.task('build', [
     'js:build-libs',
     'js:build-app',
     'styles:build-libs',
-    'styles:build-app'
+    'styles:build-app',
+    'templates:build'
 ], function () {
     gulp.start('js:build');
     gulp.start('styles:build');
