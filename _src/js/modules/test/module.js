@@ -1,0 +1,2 @@
+//= sub/module.js
+//MODULE

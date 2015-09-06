@@ -1,6 +1,5 @@
-var gulp = require('gulp');
-
-var watch = require('gulp-watch'),
+var gulp = require('gulp'),
+    watch = require('gulp-watch'),
     connect = require('gulp-connect'),
     concat = require('gulp-concat'),
     less = require('gulp-less'),
@@ -8,9 +7,8 @@ var watch = require('gulp-watch'),
     notify = require("gulp-notify"),
     templatesBuilder = require('gulp-templates-concat'),
     rigger = require('gulp-rigger'),
-    uglify = require('gulp-uglify');
-
-var mainBowerFiles = require('main-bower-files');
+    uglify = require('gulp-uglify'),
+    mainBowerFiles = require('main-bower-files');
 
 var CFG = {
     "src": {
@@ -24,45 +22,47 @@ var CFG = {
     }
 };
 
+var cacheDir = CFG.src.root + 'cache';
+
 //finally, build all sources from cache
 //i dont know how to merge two threads in right order
-gulp.task('js:build', ['js:build-app'], function () {
-    var cache = CFG.src.root + 'cache/';
-
+gulp.task('js:build', function () {
     return gulp.src([
-        cache + 'libs.js',
-        cache + 'app.js'
+        cacheDir + '/libs.js',
+        cacheDir + '/app.js'
     ]).pipe(concat(CFG.dest.js))
-        .pipe(gulp.dest(CFG.dest.root));
+        .pipe(gulp.dest(CFG.dest.root))
+        .pipe(connect.reload());
 });
 
 gulp.task('js:build-app', function () {
     return gulp.src(CFG.src.root + 'js/index.js')
         .pipe(rigger())
         .pipe(concat('app.js'))
-        .pipe(gulp.dest(CFG.src.root + 'cache'));
+        .pipe(gulp.dest(cacheDir));
 });
 
 gulp.task('js:build-libs', function () {
     return gulp.src(mainBowerFiles('**/*.js'))
         .pipe(concat('libs.js'))
         .pipe(uglify())
-        .pipe(gulp.dest(CFG.src.root + 'cache'));
+        .pipe(gulp.dest(cacheDir));
 });
 
-gulp.task('css', function () {
-    //libs
-    var src = mainBowerFiles('**/*.css').concat([CFG.src.styles.foreign + '**/*.css']);
-    gulp.src(src)
-        .pipe(concat(CFG.dest.foreignStyles))
+// - - - - - STYLES - - - - -
+
+gulp.task('styles:build', function () {
+    gulp.src([
+        cacheDir + '/libs.css',
+        cacheDir + '/app.css'
+    ])
+        .pipe(concat(CFG.dest.styles))
         .pipe(gulp.dest(CFG.dest.root))
         .pipe(connect.reload());
-
 });
 
-gulp.task('less', function () {
-    //less
-    gulp.src(CFG.src.styles.root + 'index.less')
+gulp.task('styles:build-app', function () {
+    gulp.src(CFG.src.root + 'styles/index.less')
         .pipe(plumber({
             errorHandler: true
         }))
@@ -71,13 +71,20 @@ gulp.task('less', function () {
             return "LESS: " + error.message;
         }))
         .pipe(plumber.stop())
-        .pipe(concat(CFG.dest.styles))
-        .pipe(gulp.dest(CFG.dest.root))
-        .pipe(connect.reload());
+        .pipe(concat('app.css'))
+        .pipe(gulp.dest(cacheDir));
 });
 
-gulp.task('templates', function () {
-    var root = CFG.src.templates.root;
+gulp.task('styles:build-libs', function () {
+    gulp.src(mainBowerFiles('**/*.css'))
+        .pipe(concat('libs.css'))
+        .pipe(gulp.dest(cacheDir));
+});
+
+// - - - - - TEMPLATES - - - - -
+
+gulp.task('templates:build', function () {
+    var root = CFG.src.root + 'templates';
 
     gulp.src(root + "**/*.html")
         .pipe(templatesBuilder(CFG.dest.templates, {
@@ -88,12 +95,24 @@ gulp.task('templates', function () {
         .pipe(connect.reload());
 });
 
+// - - - - - WATCHER - - - - -
+
 gulp.task('watch', function () {
-    watch([CFG.src.js.root + '**/*.js'], function (event, cb) {
-        gulp.start('js');
+    watch([CFG.src.root + 'js/**/*.js'], function () {
+        gulp.start('js:build-app');
     });
-    watch([CFG.src.styles.root + '**/*.less', CFG.src.styles.root + '**/*.css'], function (event, cb) {
-        gulp.start('less');
+    watch([CFG.src.root + 'styles/**/*.less', CFG.src.root + 'styles/**/*.css'], function () {
+        gulp.start('styles:build-app');
+    });
+    watch([CFG.src.root + 'templates/**/*.html'], function () {
+        gulp.start('templates:build');
+    });
+
+    watch([CFG.src.root + 'cache/**/*.js'], function () {
+        gulp.start('js:build');
+    });
+    watch([CFG.src.root + 'cache/**/*.css'], function () {
+        gulp.start('styles:build');
     });
 });
 
@@ -105,7 +124,14 @@ gulp.task('webserver', function () {
     });
 });
 
-gulp.task('styles', ['css', 'less']);
-gulp.task('build', ['styles', 'js', 'libs']);
+gulp.task('build', [
+    'js:build-libs',
+    'js:build-app',
+    'styles:build-libs',
+    'styles:build-app'
+], function () {
+    gulp.start('js:build');
+    gulp.start('styles:build');
+});
 
-gulp.task('default', ['build', 'webserver', 'watch']);
+gulp.task('default', ['watch', 'webserver', 'build']);
