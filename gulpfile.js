@@ -17,7 +17,7 @@ var CFG = {
     "dest": {
         "root": "web/app/",
         "js": "index.js",
-        "styles": "app.css",
+        "styles": "index.css",
         "templates": "templates.js"
     }
 };
