@@ -1,2 +1,7 @@
-//= modules/test/module.js
-//MAIN APPPLICATION 4
+//= core/_core.js
+
+//= modules/app/_app.js
+
+$(function () {
+    require('app').start();
+});
