@@ -11,4 +11,4 @@ Including:
     
 *   Templates builder (**gulp-templates-concat**)
 
-> Copy `gulp-templates-concat` from my repository into `node_modules`
+> Copy `gulp-templates-concat` from [my repository](https://github.com/sergeycher/gulp-templates-concat) into `node_modules`
