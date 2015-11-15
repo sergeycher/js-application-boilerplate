@@ -84,7 +84,7 @@ gulp.task('styles:build-libs', function () {
 // - - - - - TEMPLATES - - - - -
 
 gulp.task('templates:build', function () {
-    var root = CFG.src.root + 'templates';
+    var root = CFG.src.root + 'templates/';
 
     gulp.src(root + "**/*.html")
         .pipe(templatesBuilder(CFG.dest.templates, {
